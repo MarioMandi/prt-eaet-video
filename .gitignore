@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# podaci nikad ne idu u (javni) repozitorij nešifrirani; žive u ~/.prt-video/radni na mobitelu
+tjedni/
+stanje/
+*.tmp

@@ -1,0 +1,146 @@
+{
+  "_opis": "Popis izvora za tjedni YouTube paket (Korak 5 zadatka NOVI IZVORI ZA PRT I EAET). Mobitel ovu datoteku povlači iz repozitorija prije svakog pokretanja, pa se izmjene ovdje primjenjuju same.",
+  "kanali": [
+    {
+      "naziv": "Curable",
+      "kandidati": [
+        "https://www.youtube.com/@CurableHealth",
+        "https://www.youtube.com/@curable",
+        "https://www.youtube.com/@curableapp"
+      ],
+      "trazi_po_nazivu": "Curable chronic pain app"
+    },
+    {
+      "naziv": "This Might Hurt",
+      "kandidati": [
+        "https://www.youtube.com/@ThisMightHurt"
+      ],
+      "trazi_po_nazivu": "This Might Hurt film chronic pain"
+    },
+    {
+      "naziv": "Lin Health",
+      "kandidati": [
+        "https://www.youtube.com/channel/UCz9bmsmqeZr7-a6zKnpEDxA",
+        "https://www.youtube.com/@LinHealth"
+      ],
+      "trazi_po_nazivu": "Lin Health chronic pain"
+    },
+    {
+      "naziv": "Association for the Treatment of Neuroplastic Symptoms",
+      "zamjenski_nazivi": [
+        "ATNS",
+        "Psychophysiologic Disorders Association",
+        "PPDA"
+      ],
+      "kandidati": [
+        "https://www.youtube.com/@neuroplasticorg"
+      ],
+      "trazi_po_nazivu": "Association for the Treatment of Neuroplastic Symptoms"
+    }
+  ],
+  "pretrage": [
+    "pain reprocessing therapy",
+    "emotional awareness and expression therapy",
+    "EAET chronic pain",
+    "somatic tracking chronic pain",
+    "neuroplastic pain",
+    "nociplastic pain",
+    "psychophysiologic disorder",
+    "\"Yoni Ashar\"",
+    "\"Alan Gordon\" pain",
+    "\"Howard Schubiner\"",
+    "\"Mark Lumley\" pain",
+    "\"Brandon Yarns\"",
+    "\"Tor Wager\" pain",
+    "\"Daniel Maroti\"",
+    "\"Robert Johansson\" pain",
+    "\"David Clarke\" psychophysiologic",
+    "\"Christie Uipi\"",
+    "\"Michael Donnino\"",
+    "\"Brandon Sit\" pain",
+    "\"Joel Fishbein\" pain",
+    "\"John Sturgeon\" pain",
+    "\"Carlos Murillo\" pain"
+  ],
+  "postavke": {
+    "kanal_zadnjih_po_kartici": 15,
+    "pretraga_rezultata": 10,
+    "pretraga_rezultata_prvi_put": 5,
+    "prozor_dana_prvi_put": 8,
+    "retroaktivno_dana_prvi_put": 90,
+    "max_znakova_transkripta": 200000,
+    "soniox_ukljucen": true,
+    "soniox_max_minuta_po_videu": 120,
+    "soniox_max_minuta_tjedno": 180,
+    "soniox_model": "stt-async-v5"
+  },
+  "relevantni_pojmovi": [
+    "pain",
+    "PRT",
+    "EAET",
+    "reprocess",
+    "neuroplastic",
+    "nociplastic",
+    "somatic",
+    "psychophysiologic",
+    "mind-body",
+    "mind body",
+    "mindbody",
+    "TMS",
+    "Sarno",
+    "fibromyalgia",
+    "back pain",
+    "emotional awareness",
+    "chronic",
+    "symptom",
+    "migraine",
+    "IBS",
+    "long covid",
+    "fatigue",
+    "central sensitization",
+    "smärta",
+    "Schmerz",
+    "pijn",
+    "dolor",
+    "douleur",
+    "bol"
+  ],
+  "_napomena_kanali": "Pain Psychology Center (Alan Gordon) nema potvrđen vlastiti YouTube kanal: poznati video 'Alan Gordon, LCSW demonstrates somatic tracking...' (Lw1D_UvzIDA) objavljen je na kanalu This Might Hurt. Gordonove nastupe pokrivaju pretrage. Uklonjeno 08.11.2026.",
+  "jaki_pojmovi": [
+    "pain reprocessing",
+    "PRT",
+    "EAET",
+    "emotional awareness",
+    "neuroplastic",
+    "nociplastic",
+    "somatic tracking",
+    "psychophysiologic",
+    "mind-body",
+    "mind body",
+    "mindbody",
+    "TMS",
+    "Sarno",
+    "Schubiner",
+    "Ashar",
+    "Lumley",
+    "Yarns",
+    "Alan Gordon",
+    "Tor Wager",
+    "Maroti",
+    "Donnino",
+    "Uipi",
+    "Fishbein",
+    "Sturgeon",
+    "chronic pain",
+    "back pain",
+    "fibromyalgia",
+    "central sensitization",
+    "nervous system",
+    "smärta",
+    "Schmerz",
+    "dolor crónico",
+    "douleur chronique",
+    "chronische pijn"
+  ],
+  "_napomena_pojmovi": "jaki_pojmovi: rezultat pretrage ulazi u paket samo ako naslov/opis/oznake sadrže barem jedan; Soniox se troši samo za videe s kustosiranih kanala ili s jakim pojmom u NASLOVU. relevantni_pojmovi se više ne koriste."
+}
