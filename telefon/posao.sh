@@ -2,7 +2,8 @@
 # PRT/EAET tjedni video paket - posao koji pokreću Android raspored (Termux:API) i Termux petlja (petlja.sh).
 # Od v2.0: podaci ostaju na mobitelu (~/.prt-video/radni); u javni repozitorij ide samo šifrirani paket.
 # Stvarni rad radi samo u prozoru NEDJELJA 18:00 - PONEDJELJAK 07:40, i to jednom po ciklusu;
-# ostala pokretanja odmah završe (traju < 1 s).
+# ostala pokretanja odmah završe (traju < 1 s). Iznimka: paket koji nije stigao na GitHub (nestalo
+# mreže usred objave) šalje se ponovno pri prvom pokretanju s mrežom, i izvan prozora.
 #   posao.sh          - automatsko pokretanje (poštuje prozor)
 #   posao.sh --sada   - ručno pokretanje odmah (npr. prečac na početnom zaslonu)
 #   posao.sh --petlja - pokretanje iz Termux petlje (petlja.sh, svakih 15 min)
@@ -29,11 +30,23 @@ fi
 # dijagnostika: svako pokretanje (i izvan prozora) ostavlja trag; zadnjih 200 redaka
 echo "$(date '+%Y-%m-%d %H:%M:%S') izvor=$IZVOR$PETLJA" >> "$DIR/tik.log"
 [ "$(wc -l < "$DIR/tik.log")" -gt 200 ] && tail -n 200 "$DIR/tik.log" > "$DIR/tik.tmp" && mv "$DIR/tik.tmp" "$DIR/tik.log"
+# Je li zadnji paket s mobitela stvarno objavljen? (push je uspio i GitHub ima isto stanje)
+# Ne uspije npr. kad se mreža ugasi usred objave (zrakoplovni način) ili GitHub ne odgovara.
+neobjavljeno() {
+  local c; c=$(head -1 "$RADNI/tjedni/ZADNJI.txt" 2>/dev/null); [ -n "$c" ] || return 1
+  [ "$(sed -n 1p "$REPO/paket/ZADNJI.txt" 2>/dev/null)" = "$c" ] || return 0
+  [ "$(sed -n 3p "$REPO/paket/ZADNJI.txt" 2>/dev/null)" = "$(sed -n 3p "$RADNI/tjedni/ZADNJI.txt" 2>/dev/null)" ] || return 0
+  [ "$(git -C "$REPO" rev-list --count origin/main..HEAD 2>/dev/null)" != 0 ]
+}
+SAMO_OBJAVA=0
 if [ $RUCNO -eq 0 ]; then
   dan=$(date +%u); hm=$((10#$(date +%H%M)))
-  if ! { [ "$dan" = 7 ] && [ $hm -ge 1800 ]; } && ! { [ "$dan" = 1 ] && [ $hm -lt 740 ]; }; then exit 0; fi
+  if ! { [ "$dan" = 7 ] && [ $hm -ge 1800 ]; } && ! { [ "$dan" = 1 ] && [ $hm -lt 740 ]; }; then
+    # izvan prozora: ništa se ne sakuplja, ali paket koji nije stigao na GitHub objavi se čim ima mreže
+    neobjavljeno || exit 0
+    SAMO_OBJAVA=1
   # brza provjera bez gita i mreže: ciklus ovog ponedjeljka već je gotov u zadnjih 20 h -> izlaz
-  if python3 - "$RADNI/stanje/zadnji_rad.json" <<'PYEOF' 2>/dev/null
+  elif python3 - "$RADNI/stanje/zadnji_rad.json" <<'PYEOF' 2>/dev/null
 import json, sys, datetime as d
 s = json.load(open(sys.argv[1]))
 t = d.date.today(); pon = (t if t.isoweekday() == 1 else t + d.timedelta(8 - t.isoweekday())).isoformat()
@@ -42,12 +55,15 @@ sys.exit(0 if s.get("ciklus") == pon and s.get("faza") == "gotovo"
          and (d.datetime.now(d.timezone.utc) - z).total_seconds() < 20 * 3600 else 1)
 PYEOF
   then
-    # ... i paket je stvarno objavljen (push uspio). Ako push nije uspio (npr. zrakoplovni način usred
-    # objave), nastavi: prt_video.py preskoči sakupljanje, a paket se ponovno šifrira i pošalje.
-    if [ "$(sed -n 1p "$REPO/paket/ZADNJI.txt" 2>/dev/null)" = "$(head -1 "$RADNI/tjedni/ZADNJI.txt" 2>/dev/null)" ] \
-       && [ "$(git -C "$REPO" rev-list --count origin/main..HEAD 2>/dev/null)" = 0 ]; then exit 0; fi
-    echo "$(date '+%Y-%m-%d %H:%M:%S') ciklus gotov, paket nije objavljen - ponavljam objavu" >> "$DIR/tik.log"
+    # ... i ako je objavljen, nema posla; ako nije, samo ga ponovno pošalji
+    neobjavljeno || exit 0
+    SAMO_OBJAVA=1
   fi
+fi
+if [ $SAMO_OBJAVA -eq 1 ]; then
+  # bez mreže (zrakoplovni način) odmah izlaz, bez buđenja i bez gomilanja lokalnih commitova
+  timeout 25 git -C "$REPO" ls-remote -q origin HEAD >/dev/null 2>&1 || exit 0
+  echo "$(date '+%Y-%m-%d %H:%M:%S') paket $(head -1 "$RADNI/tjedni/ZADNJI.txt") nije bio objavljen - šaljem ga ponovno" >> "$DIR/tik.log"
 fi
 
 # samo jedan primjerak odjednom (zaključavanje istječe nakon 3 h)
@@ -58,7 +74,7 @@ fi
 trap 'rmdir "$LOCK" 2>/dev/null; command -v termux-wake-unlock >/dev/null && termux-wake-unlock' EXIT
 
 {
-  echo "===== $(date '+%Y-%m-%d %H:%M:%S') start (ručno=$RUCNO)"
+  echo "===== $(date '+%Y-%m-%d %H:%M:%S') start (ručno=$RUCNO, samo objava=$SAMO_OBJAVA)"
   set -o pipefail
   command -v termux-wake-lock >/dev/null && termux-wake-lock
   cd "$REPO" || { echo "GREŠKA: nema $REPO"; exit 1; }
@@ -69,14 +85,16 @@ trap 'rmdir "$LOCK" 2>/dev/null; command -v termux-wake-unlock >/dev/null && ter
 
   # YouTube se često mijenja: yt-dlp nightly ažuriraj najviše jednom dnevno
   YT="$HOME/bin/yt-dlp"
-  if [ -f "$YT" ] && [ -z "$(find "$DIR/yt_azuriran" -mmin -1440 2>/dev/null)" ]; then
+  if [ $SAMO_OBJAVA -eq 0 ] && [ -f "$YT" ] && [ -z "$(find "$DIR/yt_azuriran" -mmin -1440 2>/dev/null)" ]; then
     python3 "$YT" --update-to nightly 2>&1 | tail -1 && touch "$DIR/yt_azuriran"
   fi
 
-  # 2) sakupljanje (u $RADNI, ne u repozitorij)
-  ARG=""; [ $RUCNO -eq 1 ] && ARG="--sada"
-  python3 telefon/prt_video.py $ARG --radni "$RADNI"
-  echo "prt_video.py izlazni kod: $?"
+  # 2) sakupljanje (u $RADNI, ne u repozitorij); kod ponovljene objave preskače se
+  if [ $SAMO_OBJAVA -eq 0 ]; then
+    ARG=""; [ $RUCNO -eq 1 ] && ARG="--sada"
+    python3 telefon/prt_video.py $ARG --radni "$RADNI"
+    echo "prt_video.py izlazni kod: $?"
+  fi
 
   # 3) objava: SAMO šifrirani paket + kratki status (paket/ZADNJI.txt)
   C=$(head -1 "$RADNI/tjedni/ZADNJI.txt" 2>/dev/null)
