@@ -10,8 +10,10 @@ mobitelu i u uputi tjednog zadatka.
 ## Tok
 1. **Dva neovisna okidača** pokreću `telefon/posao.sh`: Android posao 4711 (Termux:API, svakih sat
    vremena) i petlja unutar Termuxa (`telefon/petlja.sh`, svakih 15 min, bez wake-locka dok spava).
-   Xiaomi briše Android posao kad prisilno zaustavi Termux:API, pa ga `telefon/cuvar.sh` vraća pri
-   svakom otvaranju Termuxa (~/.bashrc), nakon paljenja (Termux:Boot) i jednom na sat iz petlje.
+   Okidači se međusobno vraćaju preko `telefon/cuvar.sh`: Xiaomi briše Android posao kad prisilno
+   zaustavi Termux:API, pa ga petlja vraća jednom na sat; petlja se gasi kad se Termux zatvori, pa
+   je Android posao vraća pri svakom okidanju (u `tik.log`: `petlja=vracena`). Čuvar se pokreće i
+   pri svakom otvaranju Termuxa (~/.bashrc) i nakon paljenja (Termux:Boot).
    Rad se izvodi samo u prozoru **nedjelja 18:00 – ponedjeljak 07:40**, jednom po ciklusu.
 2. `posao.sh`: poravna kopiju koda s GitHubom (`git reset --hard origin/main` - na mobitelu u
    repozitoriju nema podataka), ažurira yt-dlp (najviše jednom dnevno), pokreće

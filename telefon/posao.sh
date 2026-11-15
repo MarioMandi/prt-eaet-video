@@ -19,8 +19,15 @@ if [ -f "$LOG" ] && [ "$(wc -c < "$LOG")" -gt 1000000 ]; then tail -c 300000 "$L
 
 RUCNO=0; IZVOR=android
 case "${1:-}" in --sada) RUCNO=1; IZVOR=rucno;; --petlja) IZVOR=petlja;; esac
+# Android posao (i ručno pokretanje) vraća Termux petlju ako je ugašena (npr. zatvoren Termux),
+# pa se dva okidača međusobno vraćaju; traje < 1 s kad petlja radi
+PETLJA=""
+if [ "$IZVOR" != petlja ] && [ -f "$REPO/telefon/cuvar.sh" ]; then
+  timeout 30 bash "$REPO/telefon/cuvar.sh" --samo-petlja >/dev/null 2>&1
+  case $? in 0) ;; 10) PETLJA=" petlja=vracena";; *) PETLJA=" petlja=NIJE_vracena";; esac
+fi
 # dijagnostika: svako pokretanje (i izvan prozora) ostavlja trag; zadnjih 200 redaka
-echo "$(date '+%Y-%m-%d %H:%M:%S') izvor=$IZVOR" >> "$DIR/tik.log"
+echo "$(date '+%Y-%m-%d %H:%M:%S') izvor=$IZVOR$PETLJA" >> "$DIR/tik.log"
 [ "$(wc -l < "$DIR/tik.log")" -gt 200 ] && tail -n 200 "$DIR/tik.log" > "$DIR/tik.tmp" && mv "$DIR/tik.tmp" "$DIR/tik.log"
 if [ $RUCNO -eq 0 ]; then
   dan=$(date +%u); hm=$((10#$(date +%H%M)))

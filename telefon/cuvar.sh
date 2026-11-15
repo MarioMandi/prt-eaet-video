@@ -2,11 +2,15 @@
 # Čuvar rasporeda za PRT/EAET video paket. Dva neovisna okidača za posao.sh:
 #   (1) Android posao 4711 (Termux:API job scheduler) - Xiaomi ga briše kad prisilno zaustavi Termux:API,
 #       pa ga čuvar vraća čim primijeti da ga nema;
-#   (2) petlja unutar Termuxa (svakih 15 min) - ne ovisi o Termux:API.
-# Oba dijele bravu i provjeru "već gotovo" u posao.sh, pa dvostruki rad nije moguć.
+#   (2) petlja unutar Termuxa (svakih 15 min) - ne ovisi o Termux:API; gasi se kad se Termux zatvori
+#       (Exit u obavijesti, `exit` u zadnjoj sesiji, povlačenje kartice), pa je Android posao
+#       pri svakom okidanju vraća (posao.sh -> cuvar.sh --samo-petlja).
+# Okidači se tako međusobno vraćaju. Dijele bravu i provjeru "već gotovo" u posao.sh, pa dvostruki rad nije moguć.
 #
 #   cuvar.sh             provjeri i popravi oba (poziva se iz ~/.bashrc, Termux:Boot i petlje)
-#   cuvar.sh --samo-posao  vrati samo Android posao ako ga nema
+#   cuvar.sh --samo-posao  vrati samo Android posao ako ga nema (poziva petlja jednom na sat)
+#   cuvar.sh --samo-petlja vrati samo petlju ako ne radi (poziva Android posao); izlaz 0 = radi,
+#                          10 = ponovno pokrenuta, 1/2 = nije uspjelo
 #   cuvar.sh --postavi   jednokratno: poziv u ~/.bashrc + Termux:Boot skripta, pa provjeri i popravi
 #   cuvar.sh --stanje    ispiši stanje
 export PATH="$HOME/bin:/data/data/com.termux/files/usr/bin:$PATH"
@@ -24,23 +28,46 @@ registriraj_posao() {
     --persisted true --network any >/dev/null 2>&1
   echo "$(date '+%Y-%m-%d %H:%M:%S') cuvar: Android posao $JOB_ID ponovno registriran" >> "$DIR/tik.log"
 }
-petlja_radi() { [ -f "$PID" ] && kill -0 "$(cat "$PID" 2>/dev/null)" 2>/dev/null; }
+petlja_radi() {
+  [ -f "$PID" ] || return 1
+  local p; p=$(cat "$PID" 2>/dev/null); [ -n "$p" ] || return 1
+  kill -0 "$p" 2>/dev/null || return 1
+  # nakon prisilnog gašenja PID može dobiti drugi proces: provjeri da je to stvarno petlja
+  if [ -r "/proc/$p/cmdline" ]; then tr '\0' ' ' < "/proc/$p/cmdline" | grep -q 'petlja\.sh' || return 1; fi
+  return 0
+}
 pokreni_petlju() {
-  # kopija izvan repozitorija, da je git pull ne mijenja dok radi
-  cp "$REPO/telefon/petlja.sh" "$DIR/petlja.sh" && chmod +x "$DIR/petlja.sh" || return 1
+  # brava: dva istodobna okidanja ne smiju pokrenuti dvije petlje
+  local L="$DIR/petlja.lock"
+  if ! mkdir "$L" 2>/dev/null; then
+    if [ -n "$(find "$L" -maxdepth 0 -mmin +5 2>/dev/null)" ]; then rmdir "$L" 2>/dev/null; mkdir "$L" 2>/dev/null || return 2
+    else
+      # drugo okidanje upravo pokreće petlju: pričekaj da proradi
+      for i in 1 2 3 4 5 6 7 8; do sleep 1; petlja_radi && return 0; done; return 2
+    fi
+  fi
+  if petlja_radi; then rmdir "$L"; return 0; fi
+  # kopija izvan repozitorija, da je git reset ne mijenja dok radi
+  cp "$REPO/telefon/petlja.sh" "$DIR/petlja.sh" && chmod +x "$DIR/petlja.sh" || { rmdir "$L"; return 1; }
   if command -v setsid >/dev/null; then
     setsid nohup bash "$DIR/petlja.sh" >/dev/null 2>&1 < /dev/null &
   else
     nohup bash "$DIR/petlja.sh" >/dev/null 2>&1 < /dev/null &
   fi
   disown 2>/dev/null
-  sleep 1
+  for i in 1 2 3 4 5; do sleep 1; petlja_radi && break; done
+  rmdir "$L" 2>/dev/null
+  petlja_radi
 }
 
 case "${1:-}" in
   --samo-posao)
     posao_registriran || registriraj_posao
     exit 0 ;;
+  --samo-petlja)
+    petlja_radi && exit 0
+    pokreni_petlju && exit 10
+    exit $? ;;
   --stanje)
     if posao_registriran; then echo "Android posao $JOB_ID: registriran"; else echo "Android posao $JOB_ID: NEMA"; fi
     if petlja_radi; then echo "Termux petlja: radi (PID $(cat "$PID"))"; else echo "Termux petlja: NE radi"; fi
@@ -61,7 +88,9 @@ case "${1:-}" in
 esac
 
 posao_registriran || registriraj_posao
-petlja_radi || pokreni_petlju
+if ! petlja_radi; then
+  pokreni_petlju && echo "$(date '+%Y-%m-%d %H:%M:%S') cuvar: petlja ponovno pokrenuta" >> "$DIR/tik.log"
+fi
 
 if [ "${1:-}" = "--postavi" ]; then
   echo
