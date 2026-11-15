@@ -41,7 +41,13 @@ z = d.datetime.fromisoformat(s["zadnja_promjena"])
 sys.exit(0 if s.get("ciklus") == pon and s.get("faza") == "gotovo"
          and (d.datetime.now(d.timezone.utc) - z).total_seconds() < 20 * 3600 else 1)
 PYEOF
-  then exit 0; fi
+  then
+    # ... i paket je stvarno objavljen (push uspio). Ako push nije uspio (npr. zrakoplovni način usred
+    # objave), nastavi: prt_video.py preskoči sakupljanje, a paket se ponovno šifrira i pošalje.
+    if [ "$(sed -n 1p "$REPO/paket/ZADNJI.txt" 2>/dev/null)" = "$(head -1 "$RADNI/tjedni/ZADNJI.txt" 2>/dev/null)" ] \
+       && [ "$(git -C "$REPO" rev-list --count origin/main..HEAD 2>/dev/null)" = 0 ]; then exit 0; fi
+    echo "$(date '+%Y-%m-%d %H:%M:%S') ciklus gotov, paket nije objavljen - ponavljam objavu" >> "$DIR/tik.log"
+  fi
 fi
 
 # samo jedan primjerak odjednom (zaključavanje istječe nakon 3 h)
