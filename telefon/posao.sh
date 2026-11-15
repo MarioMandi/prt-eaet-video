@@ -1,7 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # PRT/EAET tjedni video paket - posao koji pokreću Android raspored (Termux:API) i Termux petlja (petlja.sh).
 # Od v2.0: podaci ostaju na mobitelu (~/.prt-video/radni); u javni repozitorij ide samo šifrirani paket.
-# Stvarni rad radi samo u prozoru NEDJELJA 18:00 - PONEDJELJAK 07:40, i to jednom po ciklusu;
+# Stvarni rad počinje samo u prozoru NEDJELJA 12:00 - 21:30 (noću je mobitel u zrakoplovnom načinu),
+# i to jednom po ciklusu; rad koji je počeo u prozoru dovršava se i nakon 21:30;
 # ostala pokretanja odmah završe (traju < 1 s). Iznimka: paket koji nije stigao na GitHub (nestalo
 # mreže usred objave) šalje se ponovno pri prvom pokretanju s mrežom, i izvan prozora.
 #   posao.sh          - automatsko pokretanje (poštuje prozor)
@@ -41,7 +42,7 @@ neobjavljeno() {
 SAMO_OBJAVA=0
 if [ $RUCNO -eq 0 ]; then
   dan=$(date +%u); hm=$((10#$(date +%H%M)))
-  if ! { [ "$dan" = 7 ] && [ $hm -ge 1800 ]; } && ! { [ "$dan" = 1 ] && [ $hm -lt 740 ]; }; then
+  if ! { [ "$dan" = 7 ] && [ $hm -ge 1200 ] && [ $hm -lt 2130 ]; }; then
     # izvan prozora: ništa se ne sakuplja, ali paket koji nije stigao na GitHub objavi se čim ima mreže
     neobjavljeno || exit 0
     SAMO_OBJAVA=1

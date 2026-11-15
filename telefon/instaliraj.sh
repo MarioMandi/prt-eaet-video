@@ -110,7 +110,7 @@ if [ -n "$SKEY" ]; then
 fi
 unset SKEY
 
-echo; echo "== 5/6 Raspored (Termux:API, svakih sat vremena; rad samo ned 18:00 - pon 07:40)"
+echo; echo "== 5/6 Raspored (Termux:API, svakih sat vremena; rad samo ned 12:00 - 21:30)"
 if ! timeout 25 termux-job-scheduler -p >/dev/null 2>&1; then
   echo "GREŠKA: aplikacija Termux:API ne odgovara."
   echo "Instaliraj 'Termux:API' iz F-Droida (isti izvor kao Termux), otvori je jednom i ponovno pokreni ovu skriptu."

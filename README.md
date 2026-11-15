@@ -2,7 +2,7 @@
 
 Tjedni YouTube paket za zadatak **NOVI IZVORI ZA PRT I EAET** (Korak 5).
 Agent u oblaku ne može pristupiti YouTubeu, a zadaci po rasporedu ne mogu čitati privatne
-GitHub repozitorije. Zato mobitel (Termux + yt-dlp) svake nedjelje navečer prikupi nove videe i
+GitHub repozitorije. Zato mobitel (Termux + yt-dlp) svake nedjelje (12:00 – 21:30) prikupi nove videe i
 **samo titlove** (video se ne preuzima), zapakira ih, **šifrira (AES-256)** i objavi ovdje.
 Repozitorij je javan; javno su vidljivi samo kod i šifrirani paketi. Ključ postoji samo na
 mobitelu i u uputi tjednog zadatka.
@@ -14,7 +14,8 @@ mobitelu i u uputi tjednog zadatka.
    zaustavi Termux:API, pa ga petlja vraća jednom na sat; petlja se gasi kad se Termux zatvori, pa
    je Android posao vraća pri svakom okidanju (u `tik.log`: `petlja=vracena`). Čuvar se pokreće i
    pri svakom otvaranju Termuxa (~/.bashrc) i nakon paljenja (Termux:Boot).
-   Rad se izvodi samo u prozoru **nedjelja 18:00 – ponedjeljak 07:40**, jednom po ciklusu.
+   Rad počinje samo u prozoru **nedjelja 12:00 – 21:30** (noću je mobitel u zrakoplovnom načinu),
+   jednom po ciklusu. Paket koji nije stigao na GitHub šalje se ponovno čim ima mreže, i izvan prozora.
 2. `posao.sh`: poravna kopiju koda s GitHubom (`git reset --hard origin/main` - na mobitelu u
    repozitoriju nema podataka), ažurira yt-dlp (najviše jednom dnevno), pokreće
    `telefon/prt_video.py`, zatim **šifrira** paket i objavi samo `paket/<ciklus>.tar.gz.enc` i

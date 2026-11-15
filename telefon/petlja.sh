@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Petlja unutar Termuxa: svakih 15 min pokreće posao.sh (koji sam odlučuje je li u prozoru
-# ned 18:00 - pon 07:40 i je li ciklus već gotov). Dok spava ne drži wake-lock, pa ne troši bateriju.
+# ned 12:00 - 21:30 i je li ciklus već gotov). Dok spava ne drži wake-lock, pa ne troši bateriju.
 # Pokreće je cuvar.sh (kopira je u ~/.prt-video/ i pokreće odande): pri otvaranju Termuxa,
 # nakon paljenja mobitela i iz Android posla 4711 (svaki sat), ako ne radi.
 export PATH="$HOME/bin:/data/data/com.termux/files/usr/bin:$PATH"
